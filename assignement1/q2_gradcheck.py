@@ -35,6 +35,8 @@ def gradcheck_naive(f, x):
         fx3, grad3 = f(x)
         
         numgrad = (fx2 - fx3)/ (2*h) 
+        
+        x[ix] += h
         ### END YOUR CODE
 
         # Compare gradients
@@ -70,7 +72,7 @@ def your_sanity_checks():
     """
     print "Running your sanity checks..."
     ### YOUR CODE HERE
-    raise NotImplementedError
+    print "YOLOSWAG"
     ### END YOUR CODE
 
 if __name__ == "__main__":

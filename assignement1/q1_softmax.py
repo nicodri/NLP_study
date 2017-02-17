@@ -25,7 +25,6 @@ def softmax(x):
     x= x - x.max(axis = 1)[:, np.newaxis]
     
     s = np.sum(np.exp(x),axis = 1)
-    print s
     x = np.dot(np.diag(1/s), np.exp(x))
     ### END YOUR CODE
     
@@ -63,7 +62,7 @@ def test_softmax():
     """
     print "Running your tests..."
     ### YOUR CODE HERE
-    raise NotImplementedError
+    print "YOLOSWAG"
     ### END YOUR CODE  
 
 if __name__ == "__main__":
