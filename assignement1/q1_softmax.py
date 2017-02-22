@@ -1,6 +1,7 @@
 import numpy as np
 import random
 
+
 def softmax(x):
     """
     Compute the softmax function for each row of the input x.
@@ -20,11 +21,15 @@ def softmax(x):
     written assignment!
     """
 
-    ### YOUR CODE HERE
-    raise NotImplementedError
-    ### END YOUR CODE
-    
-    return x
+    # YOUR CODE HERE
+
+    # Reshape x if needed
+    x = np.atleast_2d(x)
+    eX_C = np.exp(x - np.max(x, axis=1)[:, np.newaxis])
+
+    return eX_C/np.sum(eX_C, axis=1)[:, np.newaxis]
+    # END YOUR CODE
+
 
 def test_softmax_basic():
     """
@@ -32,22 +37,23 @@ def test_softmax_basic():
     Warning: these are not exhaustive.
     """
     print "Running basic tests..."
-    test1 = softmax(np.array([1,2]))
+    test1 = softmax(np.array([1, 2]))
     print test1
     assert np.amax(np.fabs(test1 - np.array(
-        [0.26894142,  0.73105858]))) <= 1e-6
+        [0.26894142, 0.73105858]))) <= 1e-6
 
-    test2 = softmax(np.array([[1001,1002],[3,4]]))
+    test2 = softmax(np.array([[1001, 1002], [3, 4]]))
     print test2
     assert np.amax(np.fabs(test2 - np.array(
         [[0.26894142, 0.73105858], [0.26894142, 0.73105858]]))) <= 1e-6
 
-    test3 = softmax(np.array([[-1001,-1002]]))
+    test3 = softmax(np.array([[-1001, -1002]]))
     print test3
     assert np.amax(np.fabs(test3 - np.array(
         [0.73105858, 0.26894142]))) <= 1e-6
 
     print "You should verify these results!\n"
+
 
 def test_softmax():
     """ 
@@ -57,9 +63,12 @@ def test_softmax():
     your tests be graded.
     """
     print "Running your tests..."
-    ### YOUR CODE HERE
-    raise NotImplementedError
-    ### END YOUR CODE  
+    # YOUR CODE HERE
+    test_large = softmax(np.array([[10e20, 8*10e20], [3, 4]]))
+    print test_large
+    assert np.amax(np.fabs(test_large - np.array(
+        [[0., 1.], [0.26894142, 0.73105858]]))) <= 1e-6
+    # END YOUR CODE
 
 if __name__ == "__main__":
     test_softmax_basic()
