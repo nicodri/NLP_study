@@ -72,10 +72,13 @@ def sgd(f, x0, step, iterations, postprocessing = None, useSaved = False, PRINT_
     for iter in xrange(start_iter + 1, iterations + 1):
         ### Don't forget to apply the postprocessing after every iteration!
         ### You might want to print the progress every few iterations.
-
-        cost = None
+        
         ### YOUR CODE HERE
-        raise NotImplementedError
+        cost, grad = f(x)
+       
+        x -= step*grad
+        x = postprocessing(x)
+        
         ### END YOUR CODE
         
         if iter % PRINT_EVERY == 0:
@@ -120,7 +123,7 @@ def your_sanity_checks():
     """
     print "Running your sanity checks..."
     ### YOUR CODE HERE
-    raise NotImplementedError
+    print "YOLO"
     ### END YOUR CODE
 
 if __name__ == "__main__":
