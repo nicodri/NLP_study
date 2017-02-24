@@ -34,6 +34,7 @@ def gradcheck_naive(f, x):
         x[ix] += h
 
         numgrad = (fxh_plus - fxh_minus)/(2*h)
+
         # END YOUR CODE
 
         # Compare gradients
@@ -45,7 +46,6 @@ def gradcheck_naive(f, x):
             return
 
         it.iternext()  # Step to next dimension
-
     print "Gradient check passed!"
 
 
