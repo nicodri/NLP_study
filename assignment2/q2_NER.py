@@ -22,7 +22,7 @@ class Config(object):
   batch_size = 64
   label_size = 5
   hidden_size = 100
-  max_epochs = 24 
+  max_epochs = 3
   early_stopping = 2
   dropout = 0.9
   lr = 0.001
@@ -92,7 +92,11 @@ class NERModel(LanguageModel):
     (Don't change the variable names)
     """
     ### YOUR CODE HERE
-    raise NotImplementedError
+    self.input_placeholder = tf.placeholder(tf.int32, (None, self.config.window_size))
+    self.labels_placeholder = tf.placeholder(tf.float32, (None, self.config.label_size))
+    self.dropout_placeholder = tf.placeholder(tf.float32)
+
+
     ### END YOUR CODE
 
   def create_feed_dict(self, input_batch, dropout, label_batch=None):
@@ -117,7 +121,12 @@ class NERModel(LanguageModel):
       feed_dict: The feed dictionary mapping from placeholders to values.
     """
     ### YOUR CODE HERE
-    raise NotImplementedError
+    feed_dict = {
+      self.input_placeholder: input_batch,
+      self.dropout_placeholder: dropout
+    }
+    if label_batch is not None:
+      feed_dict[self.labels_placeholder] = label_batch
     ### END YOUR CODE
     return feed_dict
 
@@ -148,7 +157,10 @@ class NERModel(LanguageModel):
     # The embedding lookup is currently only implemented for the CPU
     with tf.device('/cpu:0'):
       ### YOUR CODE HERE
-      raise NotImplementedError
+      embeddings = tf.get_variable('Embedding', [len(self.wv), self.config.embed_size])
+      embed = tf.nn.embedding_lookup(embeddings, self.input_placeholder)
+      
+      window = tf.reshape(embed, (-1, self.config.window_size * self.config.embed_size))
       ### END YOUR CODE
       return window
 
@@ -174,13 +186,27 @@ class NERModel(LanguageModel):
           b2: (label_size)
 
     https://www.tensorflow.org/versions/r0.7/api_docs/python/framework.html#graph-collections
+    
+    tips on using graph collection from here:
+    http://stackoverflow.com/documentation/tensorflow/6902/how-to-use-tensorflow-graph-collections#t=201704122037154946205
     Args:
       window: tf.Tensor of shape (-1, window_size*embed_size)
     Returns:
       output: tf.Tensor of shape (batch_size, label_size)
     """
     ### YOUR CODE HERE
-    raise NotImplementedError
+    with tf.variable_scope("Layer", initializer=xavier_weight_init()):
+      W = tf.get_variable("W", [self.config.window_size * self.config.embed_size, self.config.hidden_size])
+      b1 = tf.get_variable("b1", [self.config.hidden_size])
+      layer_output = tf.tanh(tf.matmul(tf.nn.dropout(window, self.dropout_placeholder), W) + b1)
+      tf.add_to_collection("my_losses", 0.5 * self.config.l2 * tf.nn.l2_loss(W))
+
+    with tf.variable_scope("Softmax", initializer=xavier_weight_init()):
+      U = tf.get_variable("U", [self.config.hidden_size, self.config.label_size])
+      b2 = tf.get_variable("b2", [self.config.label_size])
+      output = tf.nn.softmax(tf.matmul(tf.nn.dropout(layer_output, self.dropout_placeholder), U) + b2)
+      tf.add_to_collection("my_losses", 0.5 * self.config.l2 * tf.nn.l2_loss(U))
+
     ### END YOUR CODE
     return output 
 
@@ -195,7 +221,10 @@ class NERModel(LanguageModel):
       loss: A 0-d tensor (scalar)
     """
     ### YOUR CODE HERE
-    raise NotImplementedError
+    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.labels_placeholder, logits=y))
+    tf.add_to_collection("my_losses", cross_entropy)
+    loss = tf.add_n(tf.get_collection("my_losses"))
+
     ### END YOUR CODE
     return loss
 
@@ -219,7 +248,7 @@ class NERModel(LanguageModel):
       train_op: The Op for training.
     """
     ### YOUR CODE HERE
-    raise NotImplementedError
+    train_op = tf.train.AdamOptimizer(self.config.lr).minimize(loss)
     ### END YOUR CODE
     return train_op
 
