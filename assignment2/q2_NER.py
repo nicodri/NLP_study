@@ -160,6 +160,7 @@ class NERModel(LanguageModel):
       embeddings = tf.get_variable('Embedding', [len(self.wv), self.config.embed_size])
       embed = tf.nn.embedding_lookup(embeddings, self.input_placeholder)
       
+      # -1 used to distribute on the first dimension so the second one is the one provided
       window = tf.reshape(embed, (-1, self.config.window_size * self.config.embed_size))
       ### END YOUR CODE
       return window
