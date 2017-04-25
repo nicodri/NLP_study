@@ -176,11 +176,12 @@ class RNNLM_Model(LanguageModel):
       train_op: The Op for training.
     """
     ### YOUR CODE HERE
-    train_op = tf.train.AdamOptimizer(self.config.lr).minimize(loss)
+    optimizer = tf.train.AdamOptimizer(self.config.lr)
+    train_op = optimizer.minimize(loss)
     ### END YOUR CODE
     return train_op
   
-  def __init__(self, config):
+  def __init__(self, config, need_training=True):
     self.config = config
     self.load_data(debug=True)
     self.add_placeholders()
@@ -196,7 +197,8 @@ class RNNLM_Model(LanguageModel):
     # needed to evenly divide
     output = tf.reshape(tf.concat(self.outputs, 1), [-1, len(self.vocab)])
     self.calculate_loss = self.add_loss_op(output)
-    self.train_step = self.add_training_op(self.calculate_loss)
+    if (need_training):
+      self.train_step = self.add_training_op(self.calculate_loss)
 
 
   def add_model(self, inputs):
@@ -274,6 +276,7 @@ class RNNLM_Model(LanguageModel):
     state = self.initial_state.eval()
     for step, (x, y) in enumerate(
       ptb_iterator(data, config.batch_size, config.num_steps)):
+      print x.shape
       # We need to pass in the initial state and retrieve the final state to give
       # the RNN proper history
       feed = {self.input_placeholder: x,
@@ -316,12 +319,17 @@ def generate_text(session, model, config, starting_text='<eos>',
   tokens = [model.vocab.encode(word) for word in starting_text.split()]
   for i in xrange(stop_length):
     ### YOUR CODE HERE
-    raise NotImplementedError
+    feed_dict = {model.input_placeholder: np.array(tokens[-1:])[np.newaxis, :],
+              model.initial_state: state,
+              model.dropout_placeholder: 1
+              }
+    state, y_pred = session.run([model.final_state, model.predictions[-1]], feed_dict=feed_dict)
     ### END YOUR CODE
     next_word_idx = sample(y_pred[0], temperature=temp)
     tokens.append(next_word_idx)
     if stop_tokens and model.vocab.decode(tokens[-1]) in stop_tokens:
       break
+
   output = [model.vocab.decode(word_idx) for word_idx in tokens]
   return output
 
@@ -337,9 +345,10 @@ def test_RNNLM():
   # We create the training model and generative model
   with tf.variable_scope('RNNLM') as scope:
     model = RNNLM_Model(config)
+    # print [x.name for x in model.session.get_graph().as_graph_def().node]
     # This instructs gen_model to reuse the same variables as the model above
     scope.reuse_variables()
-    # gen_model = RNNLM_Model(gen_config)
+    gen_model = RNNLM_Model(gen_config, False)
 
   init = tf.initialize_all_variables()
   saver = tf.train.Saver()
@@ -373,10 +382,10 @@ def test_RNNLM():
     print 'Test perplexity: {}'.format(test_pp)
     print '=-=' * 5
     starting_text = 'in palo alto'
-    # while starting_text:
-    #   print ' '.join(generate_sentence(
-    #       session, gen_model, gen_config, starting_text=starting_text, temp=1.0))
-    #   starting_text = raw_input('> ')
+    while starting_text:
+      print ' '.join(generate_sentence(
+          session, gen_model, gen_config, starting_text=starting_text, temp=1.0))
+      starting_text = raw_input('> ')
 
 if __name__ == "__main__":
     test_RNNLM()

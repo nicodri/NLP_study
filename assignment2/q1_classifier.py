@@ -83,8 +83,9 @@ class SoftmaxModel(Model):
     ### YOUR CODE HERE
     feed_dict = {
       self.input_placeholder: input_batch,
-      self.labels_placeholder: label_batch
     }
+    if label_batch is not None:
+      feed_dict[self.labels_placeholder] = label_batch
     ### END YOUR CODE
     return feed_dict
 
